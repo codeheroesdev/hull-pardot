@@ -11,7 +11,8 @@
   },
   "engines": {
     "node": "6.x",
-    "npm": "3.x"
+    "npm": "3.x",
+    "yarn": "0.27.5"
   },
   "repository": {
     "type": "git",
@@ -25,9 +26,9 @@
     "build:client": "NODE_ENV=production webpack --config ./webpack.config.js --progress --profile --colors",
     "build:server": "babel server -d build",
     "clean": "./node_modules/.bin/rimraf build",
-    "start": "nf start",
+    "start": "node build",
     "start:dev": "WORKER_MODE=embedded SECRET=12345 babel-watch -L server",
-    "test": "npm run test:lint && npm run test:flow",
+    "test": "npm run test:lint && npm run test:flow && npm run test:integration",
     "test:lint": "eslint server",
     "test:flow": "flow check",
     "test:units": "NODE_ENV=test mocha --require babel-register -R spec ./test/unit/*.js",
