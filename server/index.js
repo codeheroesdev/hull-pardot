@@ -1,6 +1,5 @@
 import express from "express";
 import Hull, { Connector } from "hull";
-import { Cluster } from "bottleneck";
 
 import server from "./server";
 
@@ -14,8 +13,7 @@ const connector = new Connector({
 });
 
 const app = express();
-const bottleneckCluster = new Cluster(10, 3600);
 
 connector.setupApp(app);
-server(app, bottleneckCluster);
+server(app);
 connector.startApp(app);

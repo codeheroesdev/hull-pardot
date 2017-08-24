@@ -1,18 +1,24 @@
 {
-  "name": "Hull SQL Sync",
-  "description": "A Hull Integration for SQL.",
-  "repository": "https://github.com/hull-ships/hull-sql",
+  "name": "Hull Pardot",
+  "description": "A Hull Integration with Pardot",
+  "repository": "https://github.com/hull-ships/hull-pardot",
   "website": "http://www.hull.io",
   "success_url": "/readme",
   "env": {
-    "AWS_KEY_ID": {
-      "description": "The AWS key ID to use for the S3 bucket."
+    "SECRET" : {
+      "description" : "A Secret key",
+      "generator" : "secret"
     },
-    "AWS_SECRET_KEY": {
-      "description": "The AWS secret key to use for the S3 bucket."
+    "OVERRIDE_PARDOT_API" : {
+      "description" : "Set if you want to change pardot api url.",
+      "default": ""
     },
-    "BUCKET_PATH": {
-      "description": "The AWS S3 bucket directory where the JSON are stored."
+    "LOG_LEVEL": {
+      "description" : "Logging level (emerg, alert, crit, error, warning, notice, info, debug)",
+      "value": "info"
+    },
+    "PORT": {
+      "description" : "Port to start Connector"
     }
   },
   "scripts": {}

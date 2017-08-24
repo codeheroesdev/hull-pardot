@@ -8,14 +8,19 @@
   ],
   "description": "Synchronize Hull users and Pardot Prospects",
   "readme": "readme.md",
-  "admin": "/auth",
-  "version": "0.2.8",
+  "admin": "/admin.html",
+  "version": "0.1.0",
   "picture": "picture.png",
   "ui": false,
   "settings": [],
   "private_settings": [
     {
       "name": "api_key",
+      "type": "string",
+      "format": "hidden"
+    },
+    {
+      "name": "last_user_updated_at",
       "type": "string",
       "format": "hidden"
     },
@@ -27,7 +32,7 @@
     },
     {
       "name": "email",
-      "title": "User's Pardot email",
+      "title": "Pardot Email",
       "type": "string"
     },
     {
@@ -38,6 +43,7 @@
     {
       "name": "user_key",
       "title": "Pardot API User Key",
+      "description": "To obtain Api User Key go to settings on Pardot (top right corner) then 'My Profile' and you should see your 'API User Key' property in table",
       "type": "string"
     },
     {
@@ -56,12 +62,6 @@
         "type": "string"
       },
       "default": []
-    },
-    {
-      "name": "sync_fields_to_pardot_desc",
-      "title": "Sync fields (from Hull to Pardot)",
-      "format": "title",
-      "type": "string"
     },
     {
       "name": "sync_fields_to_pardot",
@@ -87,20 +87,9 @@
               "allowCreate": false,
               "loadOptions": "/schema/custom_fields"
             }
-          },
-          "overwrite": {
-            "type": "boolean",
-            "title": "Hull overwrites Hubspot",
-            "default": false
           }
         }
       }
-    },
-    {
-      "name": "sync_fields_to_hull_desc",
-      "title": "Sync fields (From Pardot to Hull)",
-      "format": "title",
-      "type": "string"
     },
     {
       "name": "inbound_configuration",
@@ -139,7 +128,13 @@
       }
     }
   ],
-  "schedules": [],
+  "schedules": [
+    {
+      "url": "/sync",
+      "type": "cron",
+      "value": "*/3 * * * *"
+    }
+  ],
   "subscriptions": [
     {
       "url": "/notify"

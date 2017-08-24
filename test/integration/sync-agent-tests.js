@@ -1,7 +1,7 @@
 /* global describe, it, beforeEach, afterEach */
 import sinon from "sinon";
-import Bottleneck from "bottleneck";
 import assert from "assert";
+import mapDate from "../../server/mappings/map-date";
 
 import PardotClient from "./support/pardot-mock";
 import SyncAgent from "../../server/lib/sync-agent";
@@ -15,6 +15,7 @@ describe("Sync Agent", () => {
         email: "test@email.com",
         password: "jsisthebest",
         api_key: "api-key-321",
+        last_user_updated_at: "2016-03-29T14:00:00",
         sync_fields_to_pardot: [{
           hull: "test", name: "test"
         }, {
@@ -24,7 +25,22 @@ describe("Sync Agent", () => {
           hull: "test", name: "test"
         }]
       }
-    }
+    },
+    client: {
+      asUser: () => ctx.client,
+      logger: {
+        info: (data, args = "") => console.log(data, args),
+        debug: (data, args = "") => console.log(data, args),
+        error: (data, args = "") => console.log(data, args)
+      },
+      traits: sinon.spy(() => Promise.resolve({}))
+    },
+    metric: {
+      increment: () => {}
+    },
+    helpers: {
+      updateSettings: sinon.spy(() => {})
+    },
   };
 
   it("should authenticate user", (done) => {
@@ -36,11 +52,24 @@ describe("Sync Agent", () => {
           password: "jsisthebest"
         }
       },
+      client: {
+        asUser: () => ctx.client,
+        logger: {
+          info: (data) => console.log(data),
+          debug: (data) => console.log(data),
+          error: (data) => console.log(data)
+        },
+        traits: sinon.spy(() => {
+        })
+      },
       helpers: {
         updateSettings: sinon.spy(() => {})
+      },
+      metric: {
+        increment: () => {}
       }
     };
-    const syncAgent = new SyncAgent(context, new Bottleneck(30, 30));
+    const syncAgent = new SyncAgent(context);
     const authenticationNock = pardotClient.setUpAuthenticationNock("test@email.com", "jsisthebest", "user-key-123");
 
     syncAgent.authenticate("test@email.com", "password").then(() => {
@@ -50,53 +79,40 @@ describe("Sync Agent", () => {
     });
   });
 
-  it("should create prospect", (done) => {
-    const syncAgent = new SyncAgent(ctx, new Bottleneck(30, 30));
-    const prospectNock = pardotClient.setUpUpsertProspectNock("test@email.com", { test: [{ test: "array test" }] });
-
-    syncAgent.upsertProspect({ email: "test@email.com", test: [{ test: "array test" }] }).then(res => {
-      prospectNock.done();
-      assert.equal(res.prospect.id, "123");
-      assert.equal(res.prospect.email, "test@email.com");
-      done();
-    });
-  });
-
   it("should return custom fields", (done) => {
-    const syncAgent = new SyncAgent(ctx, new Bottleneck(30, 30));
-    const customFieldsNock = pardotClient.setUpCustomFieldsNock();
+    const syncAgent = new SyncAgent(ctx);
+    const customFieldsNock = pardotClient.setUpCustomFieldsNock(mapDate(0));
 
     syncAgent.getCustomFields().then(res => {
       customFieldsNock.done();
-      assert(res.length, 1);
+      assert.equal(res.length, 31);
       assert.equal(res[0].label, "Some Custom Field");
-      assert.equal(res[0].value, "Some Custom Field");
+      assert.equal(res[0].value, "custom_Field");
       done();
     });
   });
 
   it("should return prospects", (done) => {
-    const syncAgent = new SyncAgent(ctx, new Bottleneck(30, 30));
-    const prospectsNock = pardotClient.setUpFetchProspectsNock();
+    const syncAgent = new SyncAgent(ctx);
+    const prospectsNock = pardotClient.setUpFetchProspectsNock("2016-03-29T14:00:00");
 
     syncAgent.fetchProspects().then(prospects => {
       prospectsNock.done();
-      assert.equal(prospects[0].id, 123);
       assert.equal(prospects[0].id, 123);
       done();
     });
   });
 
   it("should send two batches with already sent users and rest of them", (done) => {
-    const syncAgent = new SyncAgent(ctx, new Bottleneck(30, 30));
+    const syncAgent = new SyncAgent(ctx);
     const firstUser = {
       email: "test@email.com",
       test: [{ test: "array test" }]
     };
     const secondUser = {
-      first_name: "Michael",
+      test: [{ test: "array test" }],
       "traits_pardot/id": "321",
-      test: [{ test: "array test" }]
+      first_name: "Michael"
     };
     const upsertBatchNock = pardotClient.setUpUpsertBatchNock([firstUser]);
     const updateBatchNock = pardotClient.setUpUpdateBatchNock({ 321: { test: [{ test: "array test" }], firstName: "Michael" } });

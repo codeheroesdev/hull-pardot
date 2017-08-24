@@ -1,3 +1,4 @@
 export customFields from "./custom-fields";
-export notifyHandler from "./notify-handler";
+export updateUser from "./update-user";
 export batchHandler from "./batch-handler";
+export fetchAll from "./fetch-all";

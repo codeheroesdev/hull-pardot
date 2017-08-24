@@ -2,24 +2,34 @@
 import { Request, Response } from "express";
 import _ from "lodash";
 
-export default function ({ hull }: Request, res: Response) {
-  const userAttributesMapping = _.get(hull, "ship.private_settings.sync_fields_to_hull");
+export default function (date) {
+  return ({ hull }: Request, res: Response) => {
+    const userAttributesMapping = _.get(hull, "ship.private_settings.sync_fields_to_hull");
+    let successfullUsers = 0;
+    return hull.service.syncAgent.fetchProspects(date).then(prospects => {
+      res.end("ok");
 
-  return hull.service.syncAgent.fetchProspects().then(prospects => {
-    res.end("ok");
-    prospects.map(prospect => {
-      const userTraits = _.mapKeys(_.pick(prospect, userAttributesMapping.map(p => p.hull)), (value, key) => {
-        return _.get(_.find(userAttributesMapping, mapping => mapping.hull === key), "name", key);
-      });
+      return Promise.all(prospects.map(prospect => {
+        if (!_.get(prospect, "email")) {
+          hull.client.logger.info("incoming.user.skip", { reason: "Missing email" });
+          return Promise.resolve();
+        }
 
-      const asUser = hull.client.asUser({ email: prospect.email });
-      return asUser.traits(userTraits)
-        .then(() => {
-          asUser.logger.info("incoming.user.success");
-        })
-        .catch(() => {
-          asUser.logger.error("incoming.user.error");
+        const userTraits = _.mapKeys(_.pick(prospect, userAttributesMapping.map(p => p.hull)), (value, key) => {
+          return _.get(_.find(userAttributesMapping, mapping => mapping.hull === key), "name", key);
         });
+
+        const asUser = hull.client.asUser({ email: prospect.email });
+        return asUser.traits(userTraits)
+          .then(() => {
+            successfullUsers += 1;
+            return asUser.logger.info("incoming.user.success");
+          })
+          .catch(() => asUser.logger.error("incoming.user.error"));
+      }).then(() => hull.metric.increment("ship.incoming.users", successfullUsers)));
+    }).catch(err => {
+      hull.client.logger.debug("incoming.fetch.error", { errors: err });
+      return res.end("error");
     });
-  });
+  };
 }

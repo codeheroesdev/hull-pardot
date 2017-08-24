@@ -16,60 +16,53 @@ module.exports = function mocks(apiKey: string, userKey: string) {
       .reply(200, {
         api_key: API_KEY
       }),
-    setUpUpsertProspectNock: (email, userData) => nock(API_PREFIX)
-      .post(`/prospect/version/4/do/upsert/email/${email}`)
-      .query({
-        user_key: USER_KEY,
-        api_key: API_KEY,
-        format: "json",
-        ...userData
-      })
-      .reply(201, {
-        prospect: {
-          id: "123",
-          email: "test@email.com"
-        }
-      }),
-    setUpCustomFieldsNock: () => nock(API_PREFIX)
+    setUpCustomFieldsNock: (date) => nock(API_PREFIX)
       .get("/customField/version/4/do/query")
       .query({
         user_key: USER_KEY,
         api_key: API_KEY,
-        format: "json"
+        format: "json",
+        output: "bulk",
+        sort_by: "created_at",
+        sort_order: "ascending",
+        created_after: date
       })
       .reply(200, {
         result: {
-          total_results: 1,
           customField: [
             {
               id: 123,
               name: "Some Custom Field",
-              field_id: "Custom_Field"
+              field_id: "custom_Field",
+              created_at: date
             }
           ]
         }
       }),
-    setUpFetchProspectsNock: () => nock(API_PREFIX)
+    setUpFetchProspectsNock: (date) => nock(API_PREFIX)
       .get("/prospect/version/4/do/query")
       .query({
         user_key: USER_KEY,
         api_key: API_KEY,
         format: "json",
-        offset: 0
+        output: "bulk",
+        sort_by: "updated_at",
+        sort_order: "ascending",
+        updated_after: date
       })
       .reply(200, {
         result: {
-          total_results: 1,
           prospect: [
             {
               id: 123,
-              name: "Some Custom Field",
-              field_id: "Custom_Field"
+              name: "Customer",
+              email: "test@email.com",
+              created_at: "2017-08-03 18:33:43"
             }
           ]
         }
       }),
-    setUpUpsertBatchNock: (prospects) => {
+    setUpUpsertBatchNock: (prospects, callback) => {
       const payload = JSON.stringify({ prospects: [...prospects] });
       return nock(API_PREFIX)
         .post("/prospect/version/4/do/batchUpsert")
@@ -79,10 +72,15 @@ module.exports = function mocks(apiKey: string, userKey: string) {
           api_key: API_KEY,
           format: "json"
         })
-        .reply(200);
+        .reply(200, () => {
+          if (callback) {
+            callback();
+          }
+          return {};
+        });
     },
-    setUpUpdateBatchNock: (prospects) => {
-      const payload = JSON.stringify(prospects);
+    setUpUpdateBatchNock: (prospectsObject, callback) => {
+      const payload = JSON.stringify(prospectsObject);
       return nock(API_PREFIX)
         .post("/prospect/version/4/do/batchUpdate")
         .query({
@@ -91,7 +89,12 @@ module.exports = function mocks(apiKey: string, userKey: string) {
           api_key: API_KEY,
           format: "json"
         })
-        .reply(200);
+        .reply(200, () => {
+          if (callback) {
+            callback();
+          }
+          return {};
+        });
     }
   };
 };
