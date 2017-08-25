@@ -4,6 +4,7 @@ import promiseRetry from "promise-retry";
 
 import PardotClient from "./pardot-client";
 import defaultFields from "../mappings/default-fields";
+import inboundFields from "../mappings/inbound-fields";
 
 /**
  * SyncAgent performs logic
@@ -84,7 +85,17 @@ export default class SyncAgent {
                 (err) => asUser.logger.error("outgoing.user.error", { errors: err }));
           }))
           .then(() => this.metric.increment("ship.incoming.users", chunkedUsers.length))
-          .catch(err => chunkedUsers.forEach(user => this.client.asUser(user).logger.error("outgoing.user.error", { errors: err }))))
+          .catch(err => {
+            if (err.msg) {
+              // handle succeeded users
+              chunkedUsers.map((value, key) => key.toString()).filter(key => !_.includes(_.keys(err.msg), key))
+                .forEach(idx => this.client.asUser(chunkedUsers[idx]).logger.info("outgoing.user.success"));
+
+              // handle failed users
+              return _.keys(err.msg).forEach(idx => this.client.asUser(chunkedUsers[idx]).logger.error("outgoing.user.error", { errors: _.get(err.msg, idx) }));
+            }
+            return this.client.logger.error("outgoing.users.error", { users: chunkedUsers, errors: err });
+          }))
     ).then(() => Promise.all(
       _.chunk(usersAlreadySent, 50).map(chunkedUsers =>
         this.retryUnauthorized(() => this.pardotClient.batchUpdate(chunkedUsers))
@@ -103,19 +114,47 @@ export default class SyncAgent {
             });
           }))
           .then(() => this.metric.increment("ship.incoming.users", chunkedUsers.length))
-          .catch(err => chunkedUsers.forEach(user => this.client.logger.error("outgoing.user.error", {
-            user: _.pick(user, ["traits_pardot/id", "email"]),
-            errors: err
-          }))))
+          .catch(err => {
+            if (err.msg) {
+              // handle succeeded users
+              chunkedUsers.map((value, key) => key.toString()).filter(key => !_.includes(_.keys(err.msg), key))
+                .forEach(idx => {
+                  if (_.get(chunkedUsers[idx], "email")) {
+                    return this.client.asUser(chunkedUsers[idx]).logger.info("outgoing.user.success");
+                  }
+                  return this.client.logger.info("outgoing.user.success", {
+                    user: _.pick(chunkedUsers[idx], ["traits_pardot/id", "email"])
+                  });
+                });
+
+              // handle failed users
+              return _.keys(err.msg).forEach(idx => this.client.logger.error("outgoing.user.error", {
+                user: _.pick(chunkedUsers[idx], ["traits_pardot/id", "email"]),
+                errors: err
+              }));
+            }
+            return this.client.logger.error("outgoing.users.error", { users: chunkedUsers, errors: err });
+          }))
     ));
   }
 
-  getCustomFields() {
+  getCustomFields(direction: string) {
     return this.retryUnauthorized(() => this.pardotClient.getCustomFields())
-      .then(result => _.concat(result, defaultFields()).filter(f => f.field_id !== "id" || f.field_id !== "score").map(field => ({
-        label: field.name,
-        value: field.field_id
-      })))
+      .then(result => {
+        let fields = _.concat(result, defaultFields());
+        if (direction === "outbound") {
+          fields = fields.filter(opt => opt.field_id !== "id" && opt.field_id !== "score");
+        }
+
+        if (direction === "inbound") {
+          fields = _.concat(fields, inboundFields());
+        }
+
+        return fields.map(field => ({
+          label: field.name,
+          value: field.field_id
+        }));
+      })
       .catch(err => this.client.logger.debug("incoming.custom.fields", { errors: err }));
   }
 

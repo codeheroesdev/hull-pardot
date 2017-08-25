@@ -16,10 +16,12 @@ export default function (date) {
         }
 
         const userTraits = _.mapKeys(_.pick(prospect, userAttributesMapping.map(p => p.name)), (value, key) => {
-          return _.get(_.find(userAttributesMapping, mapping => mapping.hull === key), "hull", key);
+          return _.get(_.find(userAttributesMapping, mapping => mapping.name === key), "hull", key);
         });
 
         _.merge(userTraits, { id: prospect.id });
+        if (userTraits.id === 9399861) {
+        }
 
         const asUser = hull.client.asUser({ email: prospect.email });
         return asUser.traits(userTraits, { source: "pardot" })

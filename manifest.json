@@ -85,7 +85,7 @@
             "format": "select",
             "options": {
               "allowCreate": false,
-              "loadOptions": "/schema/custom_fields"
+              "loadOptions": "/schema/outbound_custom_fields"
             }
           }
         }
@@ -111,7 +111,7 @@
             "format": "select",
             "options": {
               "allowCreate": false,
-              "loadOptions": "/schema/custom_fields"
+              "loadOptions": "/schema/inbound_custom_fields"
             }
           },
           "hull": {

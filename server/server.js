@@ -41,7 +41,8 @@ export default function server(app: express) {
     }
   }));
 
-  app.use("/schema/custom_fields", cors(), actions.customFields);
+  app.use("/schema/inbound_custom_fields", cors(), actions.customFields("inbound"));
+  app.use("/schema/outbound_custom_fields", cors(), actions.customFields("outbound"));
 
   app.use("/fetchAll", actions.fetchAll(mapDate(0)));
 

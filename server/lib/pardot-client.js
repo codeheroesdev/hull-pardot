@@ -70,10 +70,9 @@ export default class PardotClient {
       return Promise.resolve();
     }
 
-    // const payload = _.mapValues(_.keyBy(prospects, p => _.get(p, "traits_pardot/id")), value => _.omit(value, ["traits_pardot/id", "email"]));
     const payload = prospects.map(prospect => {
       const id = prospect["traits_pardot/id"];
-      return _.merge(_.omit(prospect, "traits_pardot/id"), { id });
+      return _.merge(_.omit(prospect, ["traits_pardot/id", "email"]), { id });
     });
 
     return this.request(`${this.apiUrl}/prospect/version/${this.apiVersion}/do/batchUpdate?prospects=${
