@@ -62,22 +62,27 @@ export default class PardotClient {
 
   // Needs pardot id for everyone
   batchUpdate(prospects: Array<Object>) {
-    if (!this.isConfiguredForAuth()) {
+    if (!this.isFullyConfigured()) {
       return Promise.resolve();
     }
 
     if (!prospects.length) {
       return Promise.resolve();
     }
-    const payload = _.mapValues(_.keyBy(prospects, p => _.get(p, "traits_pardot/id")), value => _.omit(value, "traits_pardot/id"));
+
+    // const payload = _.mapValues(_.keyBy(prospects, p => _.get(p, "traits_pardot/id")), value => _.omit(value, ["traits_pardot/id", "email"]));
+    const payload = prospects.map(prospect => {
+      const id = prospect["traits_pardot/id"];
+      return _.merge(_.omit(prospect, "traits_pardot/id"), { id });
+    });
 
     return this.request(`${this.apiUrl}/prospect/version/${this.apiVersion}/do/batchUpdate?prospects=${
-      JSON.stringify(payload)}&${this.prepareQuery(this.queryParameters())}`, "post");
+      JSON.stringify({ prospects: payload })}&${this.prepareQuery(this.queryParameters())}`, "post");
   }
 
   // Needs email for everyone
   batchUpsert(prospects: Array<Object>) {
-    if (!this.isConfiguredForAuth()) {
+    if (!this.isFullyConfigured()) {
       return Promise.resolve();
     }
 
@@ -89,31 +94,8 @@ export default class PardotClient {
       JSON.stringify({ prospects })}&${this.prepareQuery(this.queryParameters())}`, "post");
   }
 
-  upsertProspect(user: Object) {
-    if (!this.isConfiguredForAuth()) {
-      return Promise.resolve();
-    }
-
-    const prospectData = this.prepareQuery(_.omit(user, "email"));
-    const prospectDataSuffix = () => {
-      if (_.keys(prospectData).length === 0) {
-        return "";
-      }
-      return "&";
-    };
-    return this.request(
-      `${this.apiUrl}/prospect/version/${this.apiVersion}/do/upsert/email/${_.get(user, "email")}?${prospectData}${prospectDataSuffix()}${this.prepareQuery(this.queryParameters())}`,
-      "post"
-    ).then(res => {
-      if (res && res.data && res.data.prospect) {
-        return res.data.prospect;
-      }
-      return {};
-    });
-  }
-
   getCustomFields(date: string = mapDate(0), fields: Array<Object> = []) {
-    if (!this.isConfiguredForAuth()) {
+    if (!this.isFullyConfigured()) {
       return Promise.resolve();
     }
 
@@ -132,7 +114,7 @@ export default class PardotClient {
   }
 
   fetchProspects(date: string = _.get(this.ctx, "ship.private_settings.last_user_updated_at", mapDate(0)), prospects: Array<Object> = []) {
-    if (!this.isConfiguredForAuth()) {
+    if (!this.isFullyConfigured()) {
       return Promise.resolve();
     }
 
@@ -160,6 +142,10 @@ export default class PardotClient {
         "Content-Type": "application/json"
       }
     }).then(res => {
+      if (!_.isEmpty(_.get(res, "data.errors"))) {
+        return Promise.reject({ msg: _.get(res, "data.errors") });
+      }
+
       if (_.get(res, "data.@attributes.err_code") === 15) {
         this.ctx.client.logger.error("invalid.credentials");
         return {};

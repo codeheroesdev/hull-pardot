@@ -5,6 +5,9 @@ export default function updateUser({ client = {}, ship = {}, service: { syncAgen
   const segmentsFilter = _.get(ship, "private_settings.synchronized_segments", []);
   const filteredUsers = messages.filter(m => {
     if (_.intersection(m.segments.map(s => s.id), segmentsFilter).length === 0) {
+      if (!_.isEmpty(_.pick(m.user, ["email", "id", "external_id"]))) {
+        client.asUser(m.user).logger.info("outgoing.user.skip", { reason: "User is not included in synchronized segments setting" });
+      }
       client.logger.info("outgoing.user.skip", { reason: "User is not included in synchronized segments setting" });
       return false;
     }

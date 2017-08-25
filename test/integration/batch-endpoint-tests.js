@@ -118,13 +118,15 @@ describe("Connector for batch endpoint", function test() {
 
   it("should send users with pardot id", done => {
     pardotMock.setUpUpdateBatchNock({
-      222: {
-        test: "test2",
-        firstName: "James"
-      },
-      444: {
-        test: "test4",
-        firstName: "John"
+      prospects: {
+        222: {
+          test: "test2",
+          firstName: "James"
+        },
+        444: {
+          test: "test4",
+          firstName: "John"
+        }
       }
     }, () => done());
 
@@ -139,15 +141,17 @@ describe("Connector for batch endpoint", function test() {
 
   it("should send user traits if he has both pardot id and email", done => {
     const updateBatchNock = pardotMock.setUpUpdateBatchNock({
-      222: {
-        email: "222@test.com",
-        test: "test2",
-        firstName: "James"
-      },
-      444: {
-        email: "444@test.com",
-        test: "test4",
-        firstName: "John"
+      prospects: {
+        222: {
+          email: "222@test.com",
+          test: "test2",
+          firstName: "James"
+        },
+        444: {
+          email: "444@test.com",
+          test: "test4",
+          firstName: "John"
+        }
       }
     });
 

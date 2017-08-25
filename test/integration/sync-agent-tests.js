@@ -115,7 +115,7 @@ describe("Sync Agent", () => {
       first_name: "Michael"
     };
     const upsertBatchNock = pardotClient.setUpUpsertBatchNock([firstUser]);
-    const updateBatchNock = pardotClient.setUpUpdateBatchNock({ 321: { test: [{ test: "array test" }], firstName: "Michael" } });
+    const updateBatchNock = pardotClient.setUpUpdateBatchNock({ prospects: { 321: { test: [{ test: "array test" }], firstName: "Michael" } } });
 
     syncAgent.sendUsersBatch([firstUser, secondUser]).then(() => {
       upsertBatchNock.done();

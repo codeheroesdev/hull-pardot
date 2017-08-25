@@ -3,6 +3,7 @@ import axios from "axios";
 import Minihull from "minihull";
 import jwt from "jwt-simple";
 import assert from "assert";
+import _ from "lodash";
 
 import bootstrap from "./support/bootstrap";
 import PardotMock from "./support/pardot-mock";
@@ -23,7 +24,7 @@ describe("Connector for batch endpoint", function test() {
     }]
   };
 
-  beforeEach((done) => {
+  beforeEach(done => {
     minihull = new Minihull();
     server = bootstrap();
     minihull.listen(8001);
@@ -50,7 +51,7 @@ describe("Connector for batch endpoint", function test() {
   };
   const token = jwt.encode(config, "1234");
 
-  it("should fetch all prospects", (done) => {
+  it("should fetch all prospects", done => {
     const fetchProspectsNock = pardotMock.setUpFetchProspectsNock("1970-01-01T01:00:00");
 
     axios.get(`http://localhost:8000/fetchAll?token=${token}`).then(res => {
@@ -62,7 +63,8 @@ describe("Connector for batch endpoint", function test() {
         if (req && req.body && req.body.batch) {
           const { type, body } = req.body.batch[0];
           assert.equal(type, "traits");
-          assert.equal(body.name, "Customer");
+          assert.equal(_.get(body, "pardot/name"), "Customer");
+          assert.equal(_.get(body, "pardot/id"), "123");
           fetchProspectsNock.done();
           done();
         }

@@ -15,12 +15,14 @@ export default function (date) {
           return Promise.resolve();
         }
 
-        const userTraits = _.mapKeys(_.pick(prospect, userAttributesMapping.map(p => p.hull)), (value, key) => {
-          return _.get(_.find(userAttributesMapping, mapping => mapping.hull === key), "name", key);
+        const userTraits = _.mapKeys(_.pick(prospect, userAttributesMapping.map(p => p.name)), (value, key) => {
+          return _.get(_.find(userAttributesMapping, mapping => mapping.hull === key), "hull", key);
         });
 
+        _.merge(userTraits, { id: prospect.id });
+
         const asUser = hull.client.asUser({ email: prospect.email });
-        return asUser.traits(userTraits)
+        return asUser.traits(userTraits, { source: "pardot" })
           .then(() => {
             successfullUsers += 1;
             return asUser.logger.info("incoming.user.success");

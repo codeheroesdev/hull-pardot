@@ -112,7 +112,7 @@ export default class SyncAgent {
 
   getCustomFields() {
     return this.retryUnauthorized(() => this.pardotClient.getCustomFields())
-      .then(result => _.concat(result, defaultFields()).map(field => ({
+      .then(result => _.concat(result, defaultFields()).filter(f => f.field_id !== "id" || f.field_id !== "score").map(field => ({
         label: field.name,
         value: field.field_id
       })))
