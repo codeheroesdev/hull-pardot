@@ -118,22 +118,24 @@ describe("Connector for batch endpoint", function test() {
 
   it("should send users with pardot id", done => {
     pardotMock.setUpUpdateBatchNock({
-      prospects: {
-        222: {
+      prospects: [
+        {
           test: "test2",
-          firstName: "James"
+          firstName: "James",
+          id: 222
         },
-        444: {
+        {
           test: "test4",
-          firstName: "John"
+          firstName: "John",
+          id: 444
         }
-      }
+      ]
     }, () => done());
 
     minihull.stubBatch([{
-      "traits_pardot/id": "222", test: "test2", first_name: "James", last_name: "Veitch", segment_ids: ["hullSegmentId"]
+      "traits_pardot/id": 222, test: "test2", first_name: "James", last_name: "Veitch", segment_ids: ["hullSegmentId"]
     }, {
-      "traits_pardot/id": "444", test: "test4", first_name: "John", field: "test_field", segment_ids: ["hullSegmentId"]
+      "traits_pardot/id": 444, test: "test4", first_name: "John", field: "test_field", segment_ids: ["hullSegmentId"]
     }]);
 
     minihull.batchConnector("123456789012345678901234", "http://localhost:8000/batch");
@@ -141,24 +143,26 @@ describe("Connector for batch endpoint", function test() {
 
   it("should send user traits if he has both pardot id and email", done => {
     const updateBatchNock = pardotMock.setUpUpdateBatchNock({
-      prospects: {
-        222: {
+      prospects: [
+        {
           email: "222@test.com",
           test: "test2",
-          firstName: "James"
+          firstName: "James",
+          id: 222
         },
-        444: {
+        {
           email: "444@test.com",
           test: "test4",
-          firstName: "John"
+          firstName: "John",
+          id: 444
         }
-      }
+      ]
     });
 
     minihull.stubBatch([{
-      "traits_pardot/id": "222", email: "222@test.com", test: "test2", first_name: "James", last_name: "Veitch", segment_ids: ["hullSegmentId"]
+      "traits_pardot/id": 222, email: "222@test.com", test: "test2", first_name: "James", last_name: "Veitch", segment_ids: ["hullSegmentId"]
     }, {
-      "traits_pardot/id": "444", email: "444@test.com", test: "test4", first_name: "John", field: "test_field", segment_ids: ["hullSegmentId"]
+      "traits_pardot/id": 444, email: "444@test.com", test: "test4", first_name: "John", field: "test_field", segment_ids: ["hullSegmentId"]
     }]);
 
     minihull.batchConnector("123456789012345678901234", "http://localhost:8000/batch").then(() => {

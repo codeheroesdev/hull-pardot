@@ -158,7 +158,7 @@ export default class SyncAgent {
       .catch(err => this.client.logger.debug("incoming.custom.fields", { errors: err }));
   }
 
-  fetchProspects(date) {
+  fetchProspects(date: string) {
     return this.retryUnauthorized(() => this.pardotClient.fetchProspects(date))
       .then(({ prospects, last_user_updated_at }) => {
         if (last_user_updated_at) {

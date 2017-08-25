@@ -72,7 +72,7 @@ export default class PardotClient {
 
     const payload = prospects.map(prospect => {
       const id = prospect["traits_pardot/id"];
-      return _.merge(_.omit(prospect, ["traits_pardot/id", "email"]), { id });
+      return _.merge(_.omit(prospect, ["traits_pardot/id"]), { id });
     });
 
     return this.request(`${this.apiUrl}/prospect/version/${this.apiVersion}/do/batchUpdate?prospects=${

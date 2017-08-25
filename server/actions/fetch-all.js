@@ -2,7 +2,7 @@
 import { Request, Response } from "express";
 import _ from "lodash";
 
-export default function (date) {
+export default function (date: string) {
   return ({ hull }: Request, res: Response) => {
     const userAttributesMapping = _.get(hull, "ship.private_settings.sync_fields_to_hull");
     let successfullUsers = 0;
@@ -20,8 +20,6 @@ export default function (date) {
         });
 
         _.merge(userTraits, { id: prospect.id });
-        if (userTraits.id === 9399861) {
-        }
 
         const asUser = hull.client.asUser({ email: prospect.email });
         return asUser.traits(userTraits, { source: "pardot" })

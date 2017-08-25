@@ -111,11 +111,11 @@ describe("Sync Agent", () => {
     };
     const secondUser = {
       test: [{ test: "array test" }],
-      "traits_pardot/id": "321",
+      "traits_pardot/id": 321,
       first_name: "Michael"
     };
     const upsertBatchNock = pardotClient.setUpUpsertBatchNock([firstUser]);
-    const updateBatchNock = pardotClient.setUpUpdateBatchNock({ prospects: { 321: { test: [{ test: "array test" }], firstName: "Michael" } } });
+    const updateBatchNock = pardotClient.setUpUpdateBatchNock({ prospects: [{ test: [{ test: "array test" }], firstName: "Michael", id: 321 }] });
 
     syncAgent.sendUsersBatch([firstUser, secondUser]).then(() => {
       upsertBatchNock.done();

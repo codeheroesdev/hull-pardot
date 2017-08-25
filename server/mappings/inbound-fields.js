@@ -12,6 +12,7 @@ export default function inboundFields() {
     { name: "Is Reviewed", field_id: "is_reviewed" },
     { name: "Created At", field_id: "created_at" },
     { name: "Updated At", field_id: "updated_at" },
+    { name: "Score", field_id: "score" },
     { name: "Prospect Account Id", field_id: "prospect_account_id" }
   ];
 }

@@ -8,7 +8,6 @@ export default function defaultFields() {
     { name: "Years in business", field_id: "years_in_business" },
     { name: "Territory", field_id: "territory" },
     { name: "State", field_id: "state" },
-    { name: "Score", field_id: "score" },
     { name: "Source", field_id: "source" },
     { name: "Phone", field_id: "phone" },
     { name: "Job Title", field_id: "job_title" },
