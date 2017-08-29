@@ -93,7 +93,7 @@ export default class PardotClient {
       return Promise.resolve();
     }
 
-    return this.request(`${this.apiUrl}/prospect/version/${this.apiVersion}/do/batchCreate?prospects=${
+    return this.request(`${this.apiUrl}/prospect/version/${this.apiVersion}/do/batchUpsert?prospects=${
       JSON.stringify({ prospects })}&${this.prepareQuery(this.queryParameters())}`, "post");
   }
 
