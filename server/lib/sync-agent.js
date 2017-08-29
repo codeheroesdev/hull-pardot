@@ -35,7 +35,7 @@ export default class SyncAgent {
   authenticate() {
     return this.pardotClient.authorize().then(api_key => {
       if (api_key && api_key.errorInfo) {
-        return this.client.logger.debug("fetch.api.key.error", { errors: api_key.errorInfo });
+        return this.client.logger.error("fetch.api.key.error", { errors: api_key.errorInfo });
       }
       if (api_key) {
         return this.helpers.updateSettings({ api_key });

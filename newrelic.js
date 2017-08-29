@@ -9,7 +9,7 @@ exports.config = {
   /**
    * Array of application names.
    */
-  app_name: [process.env.NEW_RELIC_APP_NAME || "hull-sql"],
+  app_name: [process.env.NEW_RELIC_APP_NAME || "hull-pardot"],
   /**
    * Your New Relic license key.
    */

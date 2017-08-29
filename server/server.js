@@ -11,9 +11,11 @@ import * as actions from "./actions";
 export default function server(app: express) {
   app.use(serviceMiddleware());
 
+  app.use("/status", actions.statusCheck);
+
   app.use("/admin.html", (req, res) => {
     if (req.hull.service.syncAgent.pardotClient.isConfiguredForAuth() && !req.hull.service.syncAgent.pardotClient.isFullyConfigured()) {
-      res.render("admin.html", { message: "We are authenticating you with Pardot" });
+      res.render("admin.html", { message: "We are authenticating you with Pardot. Check logs for more details." });
     } else if (req.hull.service.syncAgent.pardotClient.isFullyConfigured()) {
       res.render("authenticated.html");
     } else {

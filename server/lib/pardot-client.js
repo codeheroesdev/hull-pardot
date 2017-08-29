@@ -56,7 +56,11 @@ export default class PardotClient {
         this.apiKey = res.data.api_key;
         return res.data.api_key;
       }
-      return { errorInfo: res.data };
+      if (res.status === 403) {
+        return { errorInfo: _.get(res, "msg", res) };
+      }
+
+      return { errorInfo: _.get(res, "data", "Unknown Error") };
     });
   }
 
@@ -89,7 +93,7 @@ export default class PardotClient {
       return Promise.resolve();
     }
 
-    return this.request(`${this.apiUrl}/prospect/version/${this.apiVersion}/do/batchUpsert?prospects=${
+    return this.request(`${this.apiUrl}/prospect/version/${this.apiVersion}/do/batchCreate?prospects=${
       JSON.stringify({ prospects })}&${this.prepareQuery(this.queryParameters())}`, "post");
   }
 
@@ -146,8 +150,7 @@ export default class PardotClient {
       }
 
       if (_.get(res, "data.@attributes.err_code") === 15) {
-        this.ctx.client.logger.error("invalid.credentials");
-        return {};
+        return { status: 403, msg: "Invalid Credentials" };
       }
 
       if (_.get(res, "data.@attributes.err_code") === 1) {
