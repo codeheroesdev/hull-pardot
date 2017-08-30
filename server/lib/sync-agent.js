@@ -1,6 +1,7 @@
 /* @flow */
 import _ from "lodash";
 import promiseRetry from "promise-retry";
+import moment from "moment";
 
 import PardotClient from "./pardot-client";
 import defaultFields from "../mappings/default-fields";
@@ -67,10 +68,19 @@ export default class SyncAgent {
     users.forEach(user => {
       if (_.get(user, "traits_pardot/id")) {
         usersAlreadySent.push(this.mapUserAttributes(user));
+      } else if (_.get(user, "traits_pardot/updated_at")) {
+        if (_.get(user, "email")) {
+          this.client.asUser(user).logger.info("outgoing.user.skip", { reason: "User was already sent to Pardot but we didn't fetch his Id. Please wait until next fetch or trigger it on dashboard." });
+        } else {
+          this.client.logger.info("outgoing.user.skip", {
+            user: _.pick(user, ["external_id", "anonymous_id", "id"]),
+            reason: "User was already sent to Pardot but we didn't fetch his Id. Please wait until next fetch or trigger it on dashboard."
+          });
+        }
       } else if (_.get(user, "email")) {
         usersToSend.push(this.mapUserAttributes(user));
       } else {
-        this.client.logger.info("outgoing.user.skip", { reason: "User was never sent to Pardot before and he is missing email for identification" });
+        this.client.logger.info("outgoing.user.skip", { user: _.pick(user, ["external_id", "anonymous_id", "id"]), reason: "User was never sent to Pardot before and he is missing email for identification" });
       }
     });
 
@@ -79,7 +89,7 @@ export default class SyncAgent {
         this.retryUnauthorized(() => this.pardotClient.batchUpsert(chunkedUsers))
           .then(() => chunkedUsers.forEach(user => {
             const asUser = this.client.asUser(user);
-            return asUser.traits(_.mapKeys(user, (value, key) => `pardot/${key}`))
+            return asUser.traits(_.mapKeys(_.merge(user, { updated_at: moment().format() }), (value, key) => `pardot/${key}`))
               .then(
                 () => asUser.logger.info("outgoing.user.success"),
                 (err) => asUser.logger.error("outgoing.user.error", { errors: err }));
@@ -102,7 +112,7 @@ export default class SyncAgent {
           .then(() => chunkedUsers.forEach(user => {
             if (_.get(user, "email")) {
               const asUser = this.client.asUser(user);
-              return asUser.traits(_.mapKeys(_.omit(user, "traits_pardot/id"), (value, key) => `pardot/${key}`))
+              return asUser.traits(_.mapKeys(_.merge(_.omit(user, "traits_pardot/id"), { updated_at: moment().format() }), (value, key) => `pardot/${key}`))
                 .then(
                   () => asUser.logger.info("outgoing.user.success"),
                   (err) => asUser.logger.error("outgoing.user.error", { errors: err }));

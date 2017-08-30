@@ -22,7 +22,7 @@ export default function (date: string) {
         _.merge(userTraits, { id: prospect.id });
 
         const asUser = hull.client.asUser({ email: prospect.email });
-        return asUser.traits(userTraits, { source: "pardot" })
+        return asUser.traits(userTraits)
           .then(() => {
             successfullUsers += 1;
             return asUser.logger.info("incoming.user.success");
