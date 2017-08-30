@@ -69,7 +69,8 @@ describe("Connector for notify endpoint", function test() {
         assert.equal(_.get(body, "pardot/test"), "test");
         assert.equal(_.get(body, "pardot/firstName"), "Shrek");
         assert.equal(_.get(body, "pardot/email"), "test@email.com");
-        assert.equal(Object.keys(body).length, 3);
+        assert(_.get(body, "pardot/updated_at"));
+        assert.equal(Object.keys(body).length, 4);
 
         done();
       });

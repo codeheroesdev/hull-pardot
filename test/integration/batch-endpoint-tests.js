@@ -75,13 +75,15 @@ describe("Connector for batch endpoint", function test() {
         assert.equal(_.get(jamesVeitchBatch.body, "pardot/firstName"), "James");
         assert.equal(_.get(jamesVeitchBatch.body, "pardot/test"), "test2");
         assert.equal(_.get(jamesVeitchBatch.body, "pardot/email"), "222@test.com");
-        assert.equal(Object.keys(jamesVeitchBatch.body).length, 3);
+        assert(_.get(jamesVeitchBatch.body, "pardot/updated_at"));
+        assert.equal(Object.keys(jamesVeitchBatch.body).length, 4);
 
         assert.equal(johnSnowBatch.type, "traits");
         assert.equal(_.get(johnSnowBatch.body, "pardot/firstName"), "John");
         assert.equal(_.get(johnSnowBatch.body, "pardot/test"), "test4");
         assert.equal(_.get(johnSnowBatch.body, "pardot/email"), "444@test.com");
-        assert.equal(Object.keys(johnSnowBatch.body).length, 3);
+        assert(_.get(johnSnowBatch.body, "pardot/updated_at"));
+        assert.equal(Object.keys(johnSnowBatch.body).length, 4);
         done();
       });
     });
@@ -109,7 +111,8 @@ describe("Connector for batch endpoint", function test() {
         assert.equal(_.get(body, "pardot/firstName"), "James");
         assert.equal(_.get(body, "pardot/test"), "test2");
         assert.equal(_.get(body, "pardot/email"), "222@test.com");
-        assert.equal(Object.keys(body).length, 3);
+        assert(_.get(body, "pardot/updated_at"));
+        assert.equal(Object.keys(body).length, 4);
 
         done();
       });
@@ -176,13 +179,15 @@ describe("Connector for batch endpoint", function test() {
         assert.equal(_.get(jamesVeitchBatch.body, "pardot/firstName"), "James");
         assert.equal(_.get(jamesVeitchBatch.body, "pardot/test"), "test2");
         assert.equal(_.get(jamesVeitchBatch.body, "pardot/email"), "222@test.com");
-        assert.equal(Object.keys(jamesVeitchBatch.body).length, 3);
+        assert(_.get(jamesVeitchBatch.body, "pardot/updated_at"));
+        assert.equal(Object.keys(jamesVeitchBatch.body).length, 4);
 
         assert.equal(johnSnowBatch.type, "traits");
         assert.equal(_.get(johnSnowBatch.body, "pardot/firstName"), "John");
         assert.equal(_.get(johnSnowBatch.body, "pardot/test"), "test4");
         assert.equal(_.get(johnSnowBatch.body, "pardot/email"), "444@test.com");
-        assert.equal(Object.keys(johnSnowBatch.body).length, 3);
+        assert(_.get(johnSnowBatch.body, "pardot/updated_at"));
+        assert.equal(Object.keys(johnSnowBatch.body).length, 4);
 
         done();
       });

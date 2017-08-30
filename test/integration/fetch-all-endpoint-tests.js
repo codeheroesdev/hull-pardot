@@ -63,8 +63,8 @@ describe("Connector for batch endpoint", function test() {
         if (req && req.body && req.body.batch) {
           const { type, body } = req.body.batch[0];
           assert.equal(type, "traits");
-          assert.equal(_.get(body, "pardot/name"), "Customer");
-          assert.equal(_.get(body, "pardot/id"), "123");
+          assert.equal(_.get(body, "name"), "Customer");
+          assert.equal(_.get(body, "id"), "123");
           fetchProspectsNock.done();
           done();
         }
