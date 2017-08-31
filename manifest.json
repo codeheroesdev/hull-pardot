@@ -136,7 +136,7 @@
   ],
   "schedules": [
     {
-      "url": "/sync",
+      "url": "/fetch",
       "type": "cron",
       "value": "*/3 * * * *"
     }

@@ -60,7 +60,7 @@ export default function server(app: express) {
 
   app.use("/fetchAll", actions.fetchAll(mapDate(0)));
 
-  app.use("/sync", actions.fetchAll());
+  app.use("/fetch", actions.fetchAll());
 
   return app;
 }
