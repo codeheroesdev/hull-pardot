@@ -83,7 +83,7 @@ describe("Sync Agent", () => {
     });
   });
 
-  it("should return custom fields", (done) => {
+  it("should return custom fields", done => {
     const syncAgent = new SyncAgent(ctx);
     const customFieldsNock = pardotClient.setUpCustomFieldsNock(mapDate(0));
 
@@ -96,7 +96,7 @@ describe("Sync Agent", () => {
     });
   });
 
-  it("should return prospects", (done) => {
+  it("should return prospects", done => {
     const syncAgent = new SyncAgent(ctx);
     const prospectsNock = pardotClient.setUpFetchProspectsNock("2016-03-29T14:00:00");
 
@@ -107,7 +107,7 @@ describe("Sync Agent", () => {
     });
   });
 
-  it("should send two batches with already sent users and rest of them", (done) => {
+  it("should send two batches with already sent users and rest of them", done => {
     const syncAgent = new SyncAgent(ctx);
     const firstUser = {
       email: "test@email.com",

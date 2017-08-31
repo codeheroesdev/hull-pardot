@@ -27,7 +27,7 @@ describe("Connector for notify endpoint", function test() {
     synchronized_segments: ["hullSegmentId"]
   };
 
-  beforeEach((done) => {
+  beforeEach(done => {
     minihull = new Minihull();
     server = bootstrap();
     minihull.listen(8001);
@@ -42,7 +42,7 @@ describe("Connector for notify endpoint", function test() {
     server.close();
   });
 
-  it("should send user to pardot", (done) => {
+  it("should send user to pardot", done => {
     const upsertUserNock = pardotMock.setUpUpsertBatchNock([{
       email: "test@email.com",
       test: "test",
@@ -58,7 +58,7 @@ describe("Connector for notify endpoint", function test() {
       name: "testSegment",
       id: "hullSegmentId"
     }]).then(() => {
-      minihull.on("incoming.request", (req) => {
+      minihull.on("incoming.request", req => {
         upsertUserNock.done();
         const { type, body } = req.body.batch[0];
 
@@ -74,7 +74,7 @@ describe("Connector for notify endpoint", function test() {
     }).catch(err => console.log(err));
   });
 
-  it("should not send user to pardot if he does not belong to filtered segments", (done) => {
+  it("should not send user to pardot if he does not belong to filtered segments", done => {
     const upsertUserNock = pardotMock.setUpUpsertBatchNock([{
       email: "test@email.com",
       firstName: "Shrek"
@@ -89,7 +89,7 @@ describe("Connector for notify endpoint", function test() {
       name: "testSegment",
       id: "hullSegmentId"
     }]).then(() => {
-      minihull.on("incoming.request", (req) => {
+      minihull.on("incoming.request", req => {
         done(Error("Unwanted request !", req.body));
       });
     });
