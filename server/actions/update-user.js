@@ -18,6 +18,15 @@ export default function updateUser({ client = {}, ship = {}, service: { syncAgen
       return false;
     }
 
+    if (_.get(m.user, "traits_pardot/deleted_at")) {
+      if (!_.isEmpty(_.pick(m.user, ["email", "id", "external_id"]))) {
+        client.asUser(m.user).logger.info("outgoing.user.skip", { reason: "User was deleted from Pardot" });
+        return false;
+      }
+      client.logger.info("outgoing.user.skip", { reason: "User was deleted from Pardot" });
+      return false;
+    }
+
     return true;
   }).map(m => m.user);
 

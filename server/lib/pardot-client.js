@@ -93,8 +93,10 @@ export default class PardotClient {
       return Promise.resolve();
     }
 
+    const payload = prospects.map(prospect => _.omit(prospect, ["traits_pardot/deleted_at"]));
+
     return this.request(`${this.apiUrl}/prospect/version/${this.apiVersion}/do/batchUpsert?prospects=${
-      JSON.stringify({ prospects })}&${this.prepareQuery(this.queryParameters())}`, "post");
+      JSON.stringify({ prospects: payload })}&${this.prepareQuery(this.queryParameters())}`, "post");
   }
 
   getCustomFields(date: string = mapDate(0), fields: Array<Object> = []) {
@@ -132,6 +134,25 @@ export default class PardotClient {
         return { prospects: _.concat(prospects, res.data.result.prospect), last_user_updated_at: mapDate(last.updated_at) };
       }
       return { prospects };
+    });
+  }
+
+  fetchDeletedProspects(date: string = _.get(this.ctx, "ship.private_settings.last_user_deleted_at", mapDate(0)), deletedProspects: Array<Object> = []) {
+    if (!this.isFullyConfigured()) {
+      return Promise.resolve();
+    }
+
+    return this.request(
+      `${this.apiUrl}/prospect/version/4/do/query?output=bulk&sort_by=updated_at&deleted=true&sort_order=ascending&updated_after=${date}&${this.prepareQuery(this.queryParameters())}`
+    ).then(res => {
+      if (res && res.data && res.data.result && res.data.result.prospect) {
+        const last = _.last(res.data.result.prospect);
+        if (res.data.result.prospect.length === 200) {
+          return this.fetchProspects(mapDate(last.updated_at), _.concat(deletedProspects, res.data.result.prospect));
+        }
+        return { deletedProspects: _.concat(deletedProspects, res.data.result.prospect), last_user_deleted_at: mapDate(last.updated_at) };
+      }
+      return { deletedProspects };
     });
   }
 

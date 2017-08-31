@@ -6,6 +6,7 @@ import moment from "moment";
 import PardotClient from "./pardot-client";
 import defaultFields from "../mappings/default-fields";
 import inboundFields from "../mappings/inbound-fields";
+import Cache from "hull/lib/infra";
 
 /**
  * SyncAgent performs logic
@@ -16,12 +17,16 @@ export default class SyncAgent {
   helpers: Object;
   metric: Object;
   userAttributesMapping: Array<Object>;
+  cache: Cache;
+  shipId: string;
 
   constructor(ctx: Object) {
     this.pardotClient = new PardotClient(ctx, this);
     this.client = _.get(ctx, "client");
     this.helpers = _.get(ctx, "helpers");
     this.metric = _.get(ctx, "metric");
+    this.cache = _.get(ctx, "cache");
+    this.shipId = _.get(ctx, "ship.id");
     this.userAttributesMapping = _.get(ctx, "ship.private_settings.sync_fields_to_pardot");
   }
 
@@ -58,6 +63,10 @@ export default class SyncAgent {
       result = _.merge({ "traits_pardot/id": _.get(user, "traits_pardot/id") }, result);
     }
 
+    if (user && _.get(user, "traits_pardot/deleted_at")) {
+      result = _.merge({ "traits_pardot/deleted_at": _.get(user, "traits_pardot/deleted_at") }, result);
+    }
+
     return result;
   }
 
@@ -68,32 +77,40 @@ export default class SyncAgent {
     users.forEach(user => {
       if (_.get(user, "traits_pardot/id")) {
         usersAlreadySent.push(this.mapUserAttributes(user));
-      } else if (_.get(user, "traits_pardot/updated_at")) {
-        if (_.get(user, "email")) {
-          this.client.asUser(user).logger.info("outgoing.user.skip", { reason: "User was already sent to Pardot but we didn't fetch his Id. Please wait until next fetch or trigger it on dashboard." });
-        } else {
-          this.client.logger.info("outgoing.user.skip", {
-            user: _.pick(user, ["external_id", "anonymous_id", "id"]),
-            reason: "User was already sent to Pardot but we didn't fetch his Id. Please wait until next fetch or trigger it on dashboard."
-          });
-        }
       } else if (_.get(user, "email")) {
         usersToSend.push(this.mapUserAttributes(user));
       } else {
-        this.client.logger.info("outgoing.user.skip", { user: _.pick(user, ["external_id", "anonymous_id", "id"]), reason: "User was never sent to Pardot before and he is missing email for identification" });
+        this.client.logger.info("outgoing.user.skip", {
+          user: _.pick(user, ["external_id", "anonymous_id", "id"]),
+          reason: "User was never sent to Pardot before and he is missing email for identification"
+        });
       }
     });
 
-    return Promise.all(
-      _.chunk(usersToSend, 50).map(chunkedUsers =>
-        this.retryUnauthorized(() => this.pardotClient.batchUpsert(chunkedUsers))
-          .then(() => chunkedUsers.forEach(user => {
-            const asUser = this.client.asUser(user);
-            return asUser.traits(_.mapKeys(_.merge(user, { updated_at: moment().format() }), (value, key) => `pardot/${key}`))
-              .then(
-                () => asUser.logger.info("outgoing.user.success"),
-                (err) => asUser.logger.error("outgoing.user.error", { errors: err }));
-          }))
+    return this.cache.get(`sent-emails-${this.shipId}`)
+      .then(emails => Promise.all(_.chunk(usersToSend.filter(user => {
+        if (_.includes(emails, user.email)) {
+          this.client.asUser(user).logger.info("outgoing.user.skip", { reason: "User was already sent to Pardot but we didn't fetch his Id. Please wait until next fetch or trigger it on dashboard." });
+          return false;
+        }
+        return true;
+      }), 50).map(chunkedUsers => this.retryUnauthorized(() => this.pardotClient.batchUpsert(chunkedUsers))
+          .then(() => this.saveSentEmails(chunkedUsers.map(user => user.email)))
+          .then(() => {
+            return chunkedUsers.forEach(user => {
+              const asUser = this.client.asUser(user);
+
+              let payload = user;
+              if (_.get(user, "traits_pardot/deleted_at")) {
+                payload = _.merge(_.omit(user, "traits_pardot/deleted_at"), { deleted_at: null });
+              }
+              const userTraits = _.mapKeys(_.merge(payload, { updated_at: moment().format() }), (value, key) => `pardot/${key}`);
+              return asUser.traits(userTraits)
+                .then(
+                  () => asUser.logger.info("outgoing.user.success"),
+                  (err) => asUser.logger.error("outgoing.user.error", { errors: err }));
+            });
+          })
           .then(() => this.metric.increment("ship.incoming.users", chunkedUsers.length))
           .catch(err => {
             if (err.msg) {
@@ -106,46 +123,67 @@ export default class SyncAgent {
             }
             return this.client.logger.error("outgoing.users.error", { users: chunkedUsers, errors: err });
           }))
-    ).then(() => Promise.all(
-      _.chunk(usersAlreadySent, 50).map(chunkedUsers =>
-        this.retryUnauthorized(() => this.pardotClient.batchUpdate(chunkedUsers))
-          .then(() => chunkedUsers.forEach(user => {
-            if (_.get(user, "email")) {
-              const asUser = this.client.asUser(user);
-              return asUser.traits(_.mapKeys(_.merge(_.omit(user, "traits_pardot/id"), { updated_at: moment().format() }), (value, key) => `pardot/${key}`))
-                .then(
-                  () => asUser.logger.info("outgoing.user.success"),
-                  (err) => asUser.logger.error("outgoing.user.error", { errors: err }));
-            }
-            return this.client.logger.info("outgoing.user.success", {
-              sentTraits: false,
-              reason: "Missing email but sent with pardot id",
-              user: _.pick(user, ["traits_pardot/id", "email"])
-            });
-          }))
-          .then(() => this.metric.increment("ship.incoming.users", chunkedUsers.length))
-          .catch(err => {
-            if (err.msg) {
-              // handle succeeded users
-              chunkedUsers.map((value, key) => key.toString()).filter(key => !_.includes(_.keys(err.msg), key))
-                .forEach(idx => {
-                  if (_.get(chunkedUsers[idx], "email")) {
-                    return this.client.asUser(chunkedUsers[idx]).logger.info("outgoing.user.success");
-                  }
-                  return this.client.logger.info("outgoing.user.success", {
-                    user: _.pick(chunkedUsers[idx], ["traits_pardot/id", "email"])
-                  });
+      )
+        .then(() => this.cache.get(`sent-emails-${this.shipId}`).then(sentEmails =>
+          this.cache.set(`sent-emails-${this.shipId}`, _.difference(sentEmails, usersAlreadySent.filter(p => _.get(p, "email")).map(p => p.email)))
+        ))
+        .then(() => Promise.all(
+          _.chunk(usersAlreadySent, 50).map(chunkedUsers =>
+            this.retryUnauthorized(() => this.pardotClient.batchUpdate(chunkedUsers))
+              .then(() => chunkedUsers.forEach(user => {
+                if (_.get(user, "email")) {
+                  const asUser = this.client.asUser(user);
+                  return asUser.traits(_.mapKeys(_.merge({ updated_at: moment().format() }, _.omit(user, "traits_pardot/id")), (value, key) => `pardot/${key}`))
+                    .then(
+                      () => asUser.logger.info("outgoing.user.success"),
+                      (err) => asUser.logger.error("outgoing.user.error", { errors: err }));
+                }
+                return this.client.logger.info("outgoing.user.success", {
+                  sentTraits: false,
+                  reason: "Missing email but sent with pardot id",
+                  user: _.pick(user, ["traits_pardot/id", "email"])
                 });
+              }))
+              .then(() => this.metric.increment("ship.incoming.users", chunkedUsers.length))
+              .catch(err => {
+                if (err.msg) {
+                  // handle succeeded users
+                  chunkedUsers.map((value, key) => key.toString()).filter(key => !_.includes(_.keys(err.msg), key))
+                    .forEach(idx => {
+                      if (_.get(chunkedUsers[idx], "email")) {
+                        return this.client.asUser(chunkedUsers[idx]).logger.info("outgoing.user.success");
+                      }
+                      return this.client.logger.info("outgoing.user.success", {
+                        user: _.pick(chunkedUsers[idx], ["traits_pardot/id", "email"])
+                      });
+                    });
 
-              // handle failed users
-              return _.keys(err.msg).forEach(idx => this.client.logger.error("outgoing.user.error", {
-                user: _.pick(chunkedUsers[idx], ["traits_pardot/id", "email"]),
-                errors: err
-              }));
-            }
-            return this.client.logger.error("outgoing.users.error", { users: chunkedUsers, errors: err });
-          }))
-    ));
+                  // handle failed users
+                  return _.keys(err.msg).forEach(idx => this.client.logger.error("outgoing.user.error", {
+                    user: _.pick(chunkedUsers[idx], ["traits_pardot/id", "email"]),
+                    errors: err
+                  }));
+                }
+                return this.client.logger.error("outgoing.users.error", { users: chunkedUsers, errors: err });
+              }))
+        )));
+  }
+
+
+  saveSentEmails(usersEmails: Array<string>) {
+    const key = `sent-emails-${this.shipId}`;
+
+    return this.cache.get(key).then(emails => {
+      if (emails) {
+        return _.concat(emails, usersEmails);
+      }
+      return emails;
+    }).then(emails => {
+      if (emails) {
+        return this.cache.set(key, emails, { ttl: 86400 });
+      }
+      return this.cache.set(key, usersEmails, { ttl: 86400 });
+    });
   }
 
   getCustomFields(direction: string) {
@@ -177,6 +215,16 @@ export default class SyncAgent {
         return prospects;
       })
       .catch(err => this.client.logger.debug("incoming.prospects", { errors: err }));
+  }
+
+  fetchDeletedProspects() {
+    return this.retryUnauthorized(() => this.pardotClient.fetchDeletedProspects())
+      .then(({ deletedProspects, last_user_deleted_at }) => {
+        if (last_user_deleted_at) {
+          this.helpers.updateSettings({ last_user_deleted_at });
+        }
+        return deletedProspects;
+      });
   }
 
   retryUnauthorized(promiseProvider: any) {

@@ -25,6 +25,11 @@
       "format": "hidden"
     },
     {
+      "name": "last_user_deleted_at",
+      "type": "string",
+      "format": "hidden"
+    },
+    {
       "name": "connector_configuration",
       "title": "Authentication",
       "format": "title",
