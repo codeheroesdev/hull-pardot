@@ -3,7 +3,6 @@ import _ from "lodash";
 import axios from "axios";
 import qs from "qs";
 import mapDate from "../mappings/map-date";
-import moment from "moment";
 
 import SyncAgent from "./sync-agent";
 
