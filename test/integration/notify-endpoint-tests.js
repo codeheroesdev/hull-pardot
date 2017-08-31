@@ -1,5 +1,4 @@
 /* global describe, it, beforeEach, afterEach */
-
 import Minihull from "minihull";
 import assert from "assert";
 import _ from "lodash";
@@ -32,11 +31,6 @@ describe("Connector for notify endpoint", function test() {
     minihull = new Minihull();
     server = bootstrap();
     minihull.listen(8001);
-    minihull.stubConnector({ id: "123456789012345678901236", private_settings });
-    minihull.stubSegments([{
-      name: "testSegment",
-      id: "hullSegmentId"
-    }]);
 
     setTimeout(() => {
       done();
@@ -55,12 +49,15 @@ describe("Connector for notify endpoint", function test() {
       firstName: "Shrek"
     }]);
 
-    minihull.notifyConnector("123456789012345678901236", "http://localhost:8000/notify", "user_report:update", {
+    minihull.smartNotifyConnector({ id: "123456789012345678901236", private_settings }, "http://localhost:8000/smart-notifier", "user:update", [{
       user: { email: "test@email.com", test: "test", first_name: "Shrek", last_name: "Ogre" },
       changes: {},
       events: [],
       segments: [{ id: "hullSegmentId", name: "testSegment" }]
-    }).then(() => {
+    }], [{
+      name: "testSegment",
+      id: "hullSegmentId"
+    }]).then(() => {
       minihull.on("incoming.request", (req) => {
         upsertUserNock.done();
         const { type, body } = req.body.batch[0];
@@ -74,7 +71,7 @@ describe("Connector for notify endpoint", function test() {
 
         done();
       });
-    });
+    }).catch(err => console.log(err));
   });
 
   it("should not send user to pardot if he does not belong to filtered segments", (done) => {
@@ -83,12 +80,15 @@ describe("Connector for notify endpoint", function test() {
       firstName: "Shrek"
     }]);
 
-    minihull.notifyConnector("123456789012345678901236", "http://localhost:8000/notify", "user_report:update", {
+    minihull.smartNotifyConnector({ id: "123456789012345678901236", private_settings }, "http://localhost:8000/smart-notifier", "user:update", [{
       user: { email: "test@email.com", first_name: "Shrek" },
       changes: {},
       events: [],
       segments: []
-    }).then(() => {
+    }], [{
+      name: "testSegment",
+      id: "hullSegmentId"
+    }]).then(() => {
       minihull.on("incoming.request", (req) => {
         done(Error("Unwanted request !", req.body));
       });

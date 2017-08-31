@@ -114,12 +114,17 @@ export default class SyncAgent {
           .then(() => this.metric.increment("ship.incoming.users", chunkedUsers.length))
           .catch(err => {
             if (err.msg) {
+              const sentEmails = [];
               // handle succeeded users
               chunkedUsers.map((value, key) => key.toString()).filter(key => !_.includes(_.keys(err.msg), key))
-                .forEach(idx => this.client.asUser(chunkedUsers[idx]).logger.info("outgoing.user.success"));
+                .forEach(idx => {
+                  sentEmails.push(chunkedUsers[idx].email);
+                  this.client.asUser(chunkedUsers[idx]).logger.info("outgoing.user.success");
+                });
 
               // handle failed users
-              return _.keys(err.msg).forEach(idx => this.client.asUser(chunkedUsers[idx]).logger.error("outgoing.user.error", { errors: _.get(err.msg, idx) }));
+              _.keys(err.msg).forEach(idx => this.client.asUser(chunkedUsers[idx]).logger.error("outgoing.user.error", { errors: _.get(err.msg, idx) }));
+              return this.saveSentEmails(sentEmails);
             }
             return this.client.logger.error("outgoing.users.error", { users: chunkedUsers, errors: err });
           }))

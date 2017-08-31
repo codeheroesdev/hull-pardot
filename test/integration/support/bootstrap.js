@@ -11,7 +11,7 @@ const cache = new Cache({
 
 export default function bootstrap() {
   const app = express();
-  const connector = new Connector({ hostSecret: "1234", port: 8000, clientConfig: { protocol: "http", firehoseUrl: "firehose" }, cache });
+  const connector = new Connector({ hostSecret: "1234", port: 8000, clientConfig: { protocol: "http", firehoseUrl: "firehose" }, cache, skipSignatureValidation: true });
   connector.setupApp(app);
   server(app);
   return connector.startApp(app);
