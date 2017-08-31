@@ -91,13 +91,13 @@ describe("Connector for batch endpoint", function test() {
 
   it("should send only those users who have email", done => {
     const upsertBatchNock = pardotMock.setUpUpsertBatchNock([{
-      email: "222@test.com",
+      email: "2222@test.com",
       test: "test2",
       firstName: "James"
     }]);
 
     minihull.stubBatch([{
-      email: "222@test.com", test: "test2", first_name: "James", last_name: "Veitch", segment_ids: ["hullSegmentId"]
+      email: "2222@test.com", test: "test2", first_name: "James", last_name: "Veitch", segment_ids: ["hullSegmentId"]
     }, {
       test: "test4", first_name: "John", field: "test_field", segment_ids: ["hullSegmentId"]
     }]);
@@ -110,7 +110,7 @@ describe("Connector for batch endpoint", function test() {
         assert.equal(type, "traits");
         assert.equal(_.get(body, "pardot/firstName"), "James");
         assert.equal(_.get(body, "pardot/test"), "test2");
-        assert.equal(_.get(body, "pardot/email"), "222@test.com");
+        assert.equal(_.get(body, "pardot/email"), "2222@test.com");
         assert(_.get(body, "pardot/updated_at"));
         assert.equal(Object.keys(body).length, 4);
 

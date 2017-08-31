@@ -16,7 +16,10 @@ const cache = new Cache({
 const connector = new Connector({
   hostSecret: process.env.SECRET || "1234",
   port: process.env.PORT || 8082,
-  cache
+  cache,
+  clientConfig: {
+    firehoseUrl: process.env.OVERRIDE_FIREHOSE_URL
+  }
 });
 
 const app = express();

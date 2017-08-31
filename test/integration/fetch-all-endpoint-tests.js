@@ -20,7 +20,7 @@ describe("Connector for batch endpoint", function test() {
     api_key: "api-key-321",
     last_user_updated_at: "2016-03-29T14:00:00",
     sync_fields_to_hull: [{
-      hull: "name", name: "name"
+      hull: "pardot/name", name: "name"
     }]
   };
 
@@ -28,7 +28,7 @@ describe("Connector for batch endpoint", function test() {
     minihull = new Minihull();
     server = bootstrap();
     minihull.listen(8001);
-    minihull.stubConnector({ id: "123456789012345678901234", private_settings });
+    minihull.stubConnector({ id: "123456789012345678901235", private_settings });
     minihull.stubSegments([{
       name: "testSegment",
       id: "hullSegmentId"
@@ -46,7 +46,7 @@ describe("Connector for batch endpoint", function test() {
 
   const config = {
     organization: "localhost:8001",
-    ship: "123456789012345678901234",
+    ship: "123456789012345678901235",
     secret: "1234"
   };
   const token = jwt.encode(config, "1234");
@@ -63,8 +63,8 @@ describe("Connector for batch endpoint", function test() {
         if (req && req.body && req.body.batch) {
           const { type, body } = req.body.batch[0];
           assert.equal(type, "traits");
-          assert.equal(_.get(body, "name"), "Customer");
-          assert.equal(_.get(body, "id"), "123");
+          assert.equal(_.get(body, "pardot/name"), "Customer");
+          assert.equal(_.get(body, "pardot/id"), "123");
           fetchProspectsNock.done();
           done();
         }

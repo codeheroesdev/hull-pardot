@@ -32,7 +32,7 @@ describe("Connector for notify endpoint", function test() {
     minihull = new Minihull();
     server = bootstrap();
     minihull.listen(8001);
-    minihull.stubConnector({ id: "123456789012345678901234", private_settings });
+    minihull.stubConnector({ id: "123456789012345678901236", private_settings });
     minihull.stubSegments([{
       name: "testSegment",
       id: "hullSegmentId"
@@ -55,7 +55,7 @@ describe("Connector for notify endpoint", function test() {
       firstName: "Shrek"
     }]);
 
-    minihull.notifyConnector("123456789012345678901234", "http://localhost:8000/notify", "user_report:update", {
+    minihull.notifyConnector("123456789012345678901236", "http://localhost:8000/notify", "user_report:update", {
       user: { email: "test@email.com", test: "test", first_name: "Shrek", last_name: "Ogre" },
       changes: {},
       events: [],
@@ -83,7 +83,7 @@ describe("Connector for notify endpoint", function test() {
       firstName: "Shrek"
     }]);
 
-    minihull.notifyConnector("123456789012345678901234", "http://localhost:8000/notify", "user_report:update", {
+    minihull.notifyConnector("123456789012345678901236", "http://localhost:8000/notify", "user_report:update", {
       user: { email: "test@email.com", first_name: "Shrek" },
       changes: {},
       events: [],

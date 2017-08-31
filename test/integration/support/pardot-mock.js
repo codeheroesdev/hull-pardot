@@ -56,7 +56,7 @@ module.exports = function mocks(apiKey: string, userKey: string) {
             {
               id: 123,
               name: "Customer",
-              email: "test@email.com",
+              email: `test${Math.random()}@email.com`,
               created_at: "2017-08-03 18:33:43"
             }
           ]
@@ -64,6 +64,7 @@ module.exports = function mocks(apiKey: string, userKey: string) {
       }),
     setUpUpsertBatchNock: (prospects, callback) => {
       const payload = JSON.stringify({ prospects: [...prospects] });
+      console.log(payload);
       return nock(API_PREFIX)
         .post("/prospect/version/4/do/batchUpsert")
         .query({

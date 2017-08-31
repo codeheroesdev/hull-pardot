@@ -41,6 +41,10 @@ describe("Sync Agent", () => {
     helpers: {
       updateSettings: sinon.spy(() => {})
     },
+    cache: {
+      get: () => Promise.resolve([]),
+      set: () => Promise.resolve([]),
+    }
   };
 
   it("should authenticate user", (done) => {
