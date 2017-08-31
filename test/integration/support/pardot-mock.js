@@ -56,15 +56,31 @@ module.exports = function mocks(apiKey: string, userKey: string) {
             {
               id: 123,
               name: "Customer",
-              email: `test${Math.random()}@email.com`,
+              email: "test@email.com",
               created_at: "2017-08-03 18:33:43"
             }
           ]
         }
       }),
+    setUpFetchDeletedProspectsNock: (date) => nock(API_PREFIX)
+      .get("/prospect/version/4/do/query")
+      .query({
+        user_key: USER_KEY,
+        api_key: API_KEY,
+        format: "json",
+        output: "bulk",
+        sort_by: "updated_at",
+        sort_order: "ascending",
+        deleted: true,
+        updated_after: date
+      })
+      .reply(200, {
+        result: {
+          prospect: []
+        }
+      }),
     setUpUpsertBatchNock: (prospects, callback) => {
       const payload = JSON.stringify({ prospects: [...prospects] });
-      console.log(payload);
       return nock(API_PREFIX)
         .post("/prospect/version/4/do/batchUpsert")
         .query({

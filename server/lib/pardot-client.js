@@ -3,6 +3,7 @@ import _ from "lodash";
 import axios from "axios";
 import qs from "qs";
 import mapDate from "../mappings/map-date";
+import moment from "moment";
 
 import SyncAgent from "./sync-agent";
 
@@ -127,6 +128,9 @@ export default class PardotClient {
       `${this.apiUrl}/prospect/version/4/do/query?output=bulk&sort_by=updated_at&sort_order=ascending&updated_after=${date}&${this.prepareQuery(this.queryParameters())}`
     ).then(res => {
       if (res && res.data && res.data.result && res.data.result.prospect) {
+        if (res.data.result.prospect.length === 0) {
+          return { prospects: [] };
+        }
         const last = _.last(res.data.result.prospect);
         if (res.data.result.prospect.length === 200) {
           return this.fetchProspects(mapDate(last.updated_at), _.concat(prospects, res.data.result.prospect));
@@ -146,11 +150,14 @@ export default class PardotClient {
       `${this.apiUrl}/prospect/version/4/do/query?output=bulk&sort_by=updated_at&deleted=true&sort_order=ascending&updated_after=${date}&${this.prepareQuery(this.queryParameters())}`
     ).then(res => {
       if (res && res.data && res.data.result && res.data.result.prospect) {
+        if (res.data.result.prospect.length === 0) {
+          return { deletedProspects: [] };
+        }
         const last = _.last(res.data.result.prospect);
         if (res.data.result.prospect.length === 200) {
           return this.fetchProspects(mapDate(last.updated_at), _.concat(deletedProspects, res.data.result.prospect));
         }
-        return { deletedProspects: _.concat(deletedProspects, res.data.result.prospect), last_user_deleted_at: mapDate(last.updated_at) };
+        return { deletedProspects: _.concat(deletedProspects, res.data.result.prospect), last_user_deleted_at: mapDate(_.get(last, "updated_at")) };
       }
       return { deletedProspects };
     });
