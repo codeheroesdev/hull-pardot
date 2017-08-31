@@ -1,6 +1,6 @@
 /* @flow */
 import express from "express";
-import { notifHandler } from "hull/lib/utils";
+import { notifHandler, smartNotifierHandler } from "hull/lib/utils";
 import cors from "cors";
 import mapDate from "./mappings/map-date";
 
@@ -40,6 +40,18 @@ export default function server(app: express) {
     },
     handlers: {
       "user:update": actions.updateUser
+    }
+  }));
+
+  app.use("/smart-notifier", smartNotifierHandler({
+    handlers: {
+      "user:update": (ctx: Object, messages: Array<Object>) => {
+        ctx.smartNotifierResponse.setFlowControl({
+          type: "next",
+          in: 1000
+        });
+        return actions.updateUser(ctx, messages);
+      }
     }
   }));
 
