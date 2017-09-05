@@ -51,6 +51,11 @@ export default function server(app: express) {
           in: 1000
         });
         return actions.updateUser(ctx, messages);
+      },
+      "ship:update": (ctx: Object, messages: Array<Object>) => {
+        // FIXME: when using `smartNotifierHandler` the ship object is not refreshed
+        // in the cashed correctly, until it's done in hull-node we do it explicitly here:
+        return ctx.cache.del(ctx.ship.id);
       }
     }
   }));
