@@ -1,0 +1,149 @@
+{
+  "name": "Hull-Pardot",
+  "tags": [
+    "outgoing",
+    "incoming",
+    "oneColumn",
+    "batch",
+    "smart-notifier"
+  ],
+  "description": "Synchronize Hull users and Pardot Prospects",
+  "readme": "readme.md",
+  "admin": "/admin.html",
+  "version": "0.1.0",
+  "picture": "picture.png",
+  "ui": false,
+  "settings": [],
+  "private_settings": [
+    {
+      "name": "api_key",
+      "type": "string",
+      "format": "hidden"
+    },
+    {
+      "name": "last_user_updated_at",
+      "type": "string",
+      "format": "hidden"
+    },
+    {
+      "name": "last_user_deleted_at",
+      "type": "string",
+      "format": "hidden"
+    },
+    {
+      "name": "connector_configuration",
+      "title": "Authentication",
+      "format": "title",
+      "type": "string"
+    },
+    {
+      "name": "email",
+      "title": "Pardot Email",
+      "type": "string"
+    },
+    {
+      "name": "password",
+      "title": "Pardot Password",
+      "type": "string"
+    },
+    {
+      "name": "user_key",
+      "title": "Pardot API User Key",
+      "description": "To obtain Api User Key go to settings on Pardot (top right corner) then 'My Profile' and you should see your 'API User Key' property in table",
+      "type": "string"
+    },
+    {
+      "name": "outbound_configuration",
+      "title": "Outbound Configuration",
+      "format": "title",
+      "type": "string"
+    },
+    {
+      "name": "synchronized_segments",
+      "title": "Send users belonging to one of these segments to Pardotp",
+      "description": "Only users in the specified segments are sent, if not set - no users will be sent.",
+      "type": "array",
+      "format": "segment",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    {
+      "name": "sync_fields_to_pardot",
+      "title": "Custom Fields Sync (Hull to Pardot)",
+      "type": "array",
+      "format": "table",
+      "items": {
+        "type": "object",
+        "properties": {
+          "hull": {
+            "title": "Hull Field ID",
+            "type": "string",
+            "format": "trait",
+            "options": {
+              "placeholder": "Enter a Hull field id"
+            }
+          },
+          "name": {
+            "title": "Pardot Field ID",
+            "type": "string",
+            "format": "select",
+            "options": {
+              "allowCreate": false,
+              "loadOptions": "/schema/outbound_custom_fields"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "inbound_configuration",
+      "title": "Inbound Configuration",
+      "format": "title",
+      "type": "string"
+    },
+    {
+      "name": "sync_fields_to_hull",
+      "title": "Custom Fields Sync (Pardot to Hull)",
+      "type": "array",
+      "format": "table",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "Pardot Field ID",
+            "type": "string",
+            "format": "select",
+            "options": {
+              "allowCreate": false,
+              "loadOptions": "/schema/inbound_custom_fields"
+            }
+          },
+          "hull": {
+            "title": "Hull Field ID",
+            "type": "string",
+            "format": "trait",
+            "options": {
+              "placeholder": "Enter a Hull field id",
+              "allowCreate": true,
+              "source": "pardot"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "schedules": [
+    {
+      "url": "/fetch",
+      "type": "cron",
+      "value": "*/3 * * * *"
+    }
+  ],
+  "subscriptions": [
+    {
+      "url": "/smart-notifier"
+    }
+  ]
+}
