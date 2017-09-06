@@ -39,7 +39,7 @@ export default function (date: string) {
           return asUser.traits(userTraits)
             .then(() => {
               successfulIncomingUsers += 1;
-              return asUser.logger.info("incoming.user.success");
+              return asUser.logger.info("incoming.user.success", userTraits);
             })
             .catch(() => asUser.logger.error("incoming.user.error"));
         }))))
