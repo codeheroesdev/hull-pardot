@@ -126,8 +126,7 @@
             "format": "trait",
             "options": {
               "placeholder": "Enter a Hull field id",
-              "allowCreate": true,
-              "source": "pardot"
+              "allowCreate": true
             }
           }
         }
