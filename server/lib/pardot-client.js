@@ -2,8 +2,8 @@
 import _ from "lodash";
 import axios from "axios";
 import qs from "qs";
-import mapDate from "../mappings/map-date";
 
+import mapDate from "../mappings/map-date";
 import SyncAgent from "./sync-agent";
 
 export default class PardotClient {
@@ -124,7 +124,7 @@ export default class PardotClient {
     }
 
     return this.request(
-      `${this.apiUrl}/prospect/version/4/do/query?output=bulk&sort_by=updated_at&sort_order=ascending&updated_after=${date}&${this.prepareQuery(this.queryParameters())}`
+      `${this.apiUrl}/prospect/version/4/do/query?output=full&sort_by=updated_at&sort_order=ascending&updated_after=${date}&${this.prepareQuery(this.queryParameters())}`
     ).then(res => {
       if (res && res.data && res.data.result && res.data.result.prospect) {
         if (res.data.result.prospect.length === 0) {
