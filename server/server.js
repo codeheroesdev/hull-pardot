@@ -21,6 +21,7 @@ export default function server(app: express) {
     } else {
       res.render("admin.html", { message: "Please configure all authentication details in Settings tab. If all settings are set please wait until changes will be applied to the platform." });
     }
+    return req.hull.service.syncAgent.getCustomFields();
   });
 
   app.use(requireConfiguration);
@@ -48,7 +49,8 @@ export default function server(app: express) {
       "user:update": (ctx: Object, messages: Array<Object>) => {
         ctx.smartNotifierResponse.setFlowControl({
           type: "next",
-          in: 1000
+          in: parseInt(process.env.FLOW_CONTROL_IN, 10) || 1000,
+          size: parseInt(process.env.FLOW_CONTROL_SIZE, 10) || 100
         });
         return actions.updateUser(ctx, messages);
       }

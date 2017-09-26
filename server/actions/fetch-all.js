@@ -3,6 +3,8 @@ import { Request, Response } from "express";
 import _ from "lodash";
 import moment from "moment";
 
+import { toHull } from "../mappings/custom-fields-mapping";
+
 export default function (date: string) {
   return ({ hull }: Request, res: Response) => {
     const userAttributesMapping = _.get(hull, "ship.private_settings.sync_fields_to_hull");
@@ -21,32 +23,48 @@ export default function (date: string) {
             return asUser.logger.info("incoming.user.success");
           })
           .catch(() => asUser.logger.error("incoming.user.error"));
-      })); })
-      .then(() => hull.service.syncAgent.fetchProspects(date).then(prospects =>
-        Promise.all(prospects.map(prospect => {
+      }));
+    })
+      .then(() => hull.service.syncAgent.fetchProspects(date).then(prospects => {
+        return Promise.all(prospects.map(prospect => {
           if (!_.get(prospect, "email")) {
             hull.client.logger.info("incoming.user.skip", { reason: "Missing email" });
             return Promise.resolve();
           }
 
-          const userTraits = _.mapKeys(_.pick(prospect, userAttributesMapping.map(p => p.name)), (value, key) => {
+          const mappedProspect = toHull(prospect);
+
+          const userTraits = _.mapKeys(_.pick(mappedProspect, userAttributesMapping.map(p => p.name)), (value, key) => {
             return _.get(_.find(userAttributesMapping, mapping => mapping.name === key), "hull", key);
           });
+
+          if (_.get(mappedProspect, "first_name")) {
+            userTraits.first_name = { operation: "setIfNull", value: _.get(prospect, "first_name") };
+          }
+
+          if (_.get(mappedProspect, "last_name")) {
+            userTraits.last_name = { operation: "setIfNull", value: _.get(prospect, "last_name") };
+          }
 
           _.merge(userTraits, { "pardot/id": prospect.id, "pardot/deleted_at": null });
 
           const asUser = hull.client.asUser({ email: prospect.email });
           return asUser.traits(userTraits)
-            .then(() => {
-              successfulIncomingUsers += 1;
-              return asUser.logger.info("incoming.user.success");
-            })
-            .catch(() => asUser.logger.error("incoming.user.error"));
-        }))))
-        .then(() => hull.metric.increment("ship.incoming.users", successfulIncomingUsers))
-        .catch(err => {
-          hull.client.logger.debug("incoming.fetch.error", { errors: err });
-          return res.end("error");
-        });
+              .then(() => {
+                successfulIncomingUsers += 1;
+                return {};
+                // return asUser.logger.info("incoming.user.success");
+              })
+              .catch(err => asUser.logger.error("incoming.user.error", { errors: err }));
+        }));
+      }))
+      .then(() => {
+        console.log(successfulIncomingUsers);
+        return hull.metric.increment("ship.incoming.users", successfulIncomingUsers);
+      })
+      .catch(err => {
+        hull.client.logger.debug("incoming.fetch.error", { errors: err });
+        return res.end("error");
+      });
   };
 }
