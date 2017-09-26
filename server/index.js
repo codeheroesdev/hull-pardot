@@ -9,20 +9,20 @@ if (process.env.LOG_LEVEL) {
   Hull.logger.transports.console.level = process.env.LOG_LEVEL;
 }
 
-let cache
+let cache;
 
 
 if (process.env.REDIS_URL) {
-    cache = new Cache({
-      store: redisStore,
-      url: process.env.REDIS_URL,
-      ttl: 86400
-    });
+  cache = new Cache({
+    store: redisStore,
+    url: process.env.REDIS_URL,
+    ttl: 86400
+  });
 } else {
-    cache = new Cache({
-      store: "memory",
-      ttl: 86400
-    });
+  cache = new Cache({
+    store: "memory",
+    ttl: 86400
+  });
 }
 
 

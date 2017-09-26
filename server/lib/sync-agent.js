@@ -1,4 +1,3 @@
-/* @flow */
 import _ from "lodash";
 import promiseRetry from "promise-retry";
 import moment from "moment";

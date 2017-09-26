@@ -1,4 +1,3 @@
-// @flow
 import _ from "lodash";
 import axios from "axios";
 import qs from "qs";

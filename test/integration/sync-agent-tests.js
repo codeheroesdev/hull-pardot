@@ -89,7 +89,7 @@ describe("Sync Agent", () => {
 
     syncAgent.getCustomFields().then(res => {
       customFieldsNock.done();
-      assert.equal(res.length, 31);
+      assert.equal(res.length, 33);
       assert.equal(res[0].label, "Some Custom Field");
       assert.equal(res[0].value, "custom_Field");
       done();

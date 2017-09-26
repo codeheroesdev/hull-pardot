@@ -50,7 +50,6 @@ export default function (date: string) {
 
           const asUser = hull.client.asUser({ email: prospect.email });
           return asUser.traits(userTraits)
-
               .then(() => {
                 successfulIncomingUsers += 1;
                 return asUser.logger.info("incoming.user.success");

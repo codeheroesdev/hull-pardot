@@ -45,7 +45,7 @@ module.exports = function mocks(apiKey: string, userKey: string) {
         user_key: USER_KEY,
         api_key: API_KEY,
         format: "json",
-        output: "bulk",
+        output: "full",
         sort_by: "updated_at",
         sort_order: "ascending",
         updated_after: date

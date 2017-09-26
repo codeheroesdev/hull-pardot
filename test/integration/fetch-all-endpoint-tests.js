@@ -61,6 +61,7 @@ describe("Connector for fetchAll endpoint", function test() {
       }
 
       minihull.on("incoming.request", req => {
+        console.log(req.body.batch);
         if (req && req.body && req.body.batch) {
           fetchDeletedProspectsNock.done();
           fetchProspectsNock.done();

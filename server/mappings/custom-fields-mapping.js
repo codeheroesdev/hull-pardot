@@ -68,7 +68,7 @@ export function toPardot(user: Object, cache: Object = {}, shipId: string, clien
   ;
 }
 
-export function toHull(prospect) {
+export function toHull(prospect: Object) {
   return _.mapValues(prospect, val => {
     if (val && val.value) {
       return val.value;

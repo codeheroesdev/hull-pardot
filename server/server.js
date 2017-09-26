@@ -54,6 +54,7 @@ export default function server(app: express) {
         });
         return actions.updateUser(ctx, messages);
       },
+// eslint-disable-next-line no-unused-vars
       "ship:update": (ctx: Object, messages: Array<Object>) => {
         // FIXME: when using `smartNotifierHandler` the ship object is not refreshed
         // in the cashed correctly, until it's done in hull-node we do it explicitly here:
