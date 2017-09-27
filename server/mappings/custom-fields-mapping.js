@@ -1,12 +1,10 @@
 // @flow
 import _ from "lodash";
-
+import moment from "moment";
 export function toPardot(user: Object, cache: Object = {}, shipId: string, client: Object) {
   return cache.get(`${shipId}-custom-fields`).then(fields => {
     if (fields) {
-      console.log(user);
       const logger = user.email ? client.asUser({ email: user.email }).logger : client.logger;
-
       fields.forEach(field => {
         const fieldId = field.type_id;
         const fieldName = field.field_id;
@@ -41,6 +39,7 @@ export function toPardot(user: Object, cache: Object = {}, shipId: string, clien
               user[fieldName] = null;
               return user;
             }
+            user[fieldName] = moment(Date.parse(user[fieldName])).format("YYYY[-]MM[-]DD");
             return user;
           }
 
@@ -62,7 +61,6 @@ export function toPardot(user: Object, cache: Object = {}, shipId: string, clien
         return user;
       });
     }
-
     return _.pickBy(user, x => x !== null);
   })
   ;
