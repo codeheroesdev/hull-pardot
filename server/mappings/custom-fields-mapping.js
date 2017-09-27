@@ -62,8 +62,7 @@ export function toPardot(user: Object, cache: Object = {}, shipId: string, clien
       });
     }
     return _.pickBy(user, x => x !== null);
-  })
-  ;
+  });
 }
 
 export function toHull(prospect: Object) {
